@@ -1,5 +1,5 @@
 ---
-title: "Anexo X. Ejemplo simplificado de ontología y grafo de conocimiento para MO-4"
+title: "Anexo 1. Ejemplo simplificado de ontología y grafo de conocimiento para MO-4"
 subtitle: "Representación didáctica de un activo turístico mediante R"
 author: "Equipo UIB - IAIB / MoDAE / GREI"
 date: "`r Sys.Date()`"
