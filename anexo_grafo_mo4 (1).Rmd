@@ -1,0 +1,454 @@
+---
+title: "Anexo X. Ejemplo simplificado de ontología y grafo de conocimiento para MO-4"
+subtitle: "Representación didáctica de un activo turístico mediante R"
+author: "Equipo UIB - IAIB / MoDAE / GREI"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+  pdf_document:
+    toc: true
+    number_sections: true
+lang: es
+---
+
+```{r setup, include=FALSE}
+# Configuración general del documento.
+# echo = TRUE muestra el código en el anexo.
+# warning = FALSE y message = FALSE evitan mensajes innecesarios en la salida.
+
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+# Objetivo del anexo
+
+Este anexo muestra, de forma simplificada, cómo puede representarse un activo turístico del módulo MO-4 como un pequeño grafo de conocimiento.
+
+El objetivo no es sustituir la arquitectura real de la Plataforma Inteligente de Destinos (PID), ni reproducir de forma completa la Ontología del Turismo de SEGITTUR. El objetivo es mostrar de manera comprensible cómo una ontología define clases y relaciones, y cómo un grafo permite representar activos concretos siguiendo esa estructura.
+
+La idea central es la siguiente:
+
+> La ontología define el significado.  
+> El grafo conecta los datos reales siguiendo ese significado.
+
+En este ejemplo se usa el activo turístico **Playa de Muro**. Podría sustituirse por cualquier otro activo del catálogo MO-4: un museo, una oficina de turismo, una ruta, un evento, un alojamiento o un servicio público.
+
+# Preparación del entorno
+
+```{r paquetes}
+# Paquetes necesarios para construir y visualizar el grafo.
+# Si no están instalados, descomenta las líneas siguientes:
+
+# install.packages("igraph")
+# install.packages("tibble")
+# install.packages("dplyr")
+
+library(igraph)
+library(tibble)
+library(dplyr)
+```
+
+# Idea conceptual
+
+Una ontología turística funciona como un **lenguaje común** para describir el destino. Define clases, propiedades y relaciones.
+
+Por ejemplo:
+
+- una **playa** puede ser un tipo de **recurso de interés turístico**;
+- un **hotel** puede ser un tipo de **alojamiento**;
+- una **oficina de turismo** puede ser un tipo de **servicio público**;
+- un **evento** puede celebrarse en un municipio o en un recurso concreto;
+- un activo turístico puede tener localización, horario, descripción, multimedia, accesibilidad, idioma disponible y canales de publicación.
+
+El grafo de conocimiento representa casos concretos siguiendo esa lógica. Así, **Playa de Muro** deja de ser solo una fila en una tabla y pasa a ser un nodo conectado con municipio, servicios, canales digitales, indicadores y otros activos.
+
+# Definición de nodos
+
+En un grafo, los **nodos** representan entidades.
+
+En este ejemplo mezclamos tres tipos de nodos:
+
+1. **Clases ontológicas**, como `Recurso turístico` o `Playa`.
+2. **Instancias concretas**, como `Playa de Muro`.
+3. **Entidades relacionadas**, como municipio, servicios, canales digitales o indicadores.
+
+```{r nodos}
+# Tabla de nodos del grafo.
+# Cada fila representa una entidad.
+#
+# El prefijo "seg:" se usa aquí para representar clases inspiradas
+# en la Ontología del Turismo de SEGITTUR.
+#
+# El prefijo "mo4:" se usa para representar entidades concretas
+# del catálogo MO-4 de Mallorca.
+#
+# Esto es solo una convención didáctica para el ejemplo.
+
+nodes <- tribble(
+  ~id,                         ~label,                         ~tipo,
+  "seg:RecursoTuristico",      "Recurso de interés turístico", "Clase ontológica",
+  "seg:Playa",                 "Playa",                        "Clase ontológica",
+  "seg:Evento",                "Evento",                       "Clase ontológica",
+  "mo4:PlayaDeMuro",           "Playa de Muro",                "Activo MO-4",
+  "mo4:MunicipioMuro",         "Municipio de Muro",            "Territorio",
+  "mo4:Socorrismo",            "Servicio de socorrismo",       "Servicio público",
+  "mo4:Aparcamiento",          "Aparcamiento cercano",         "Servicio",
+  "mo4:Accesibilidad",         "Accesibilidad parcial",        "Atributo",
+  "mo4:Imagenes",              "Imágenes y multimedia",        "Contenido",
+  "mo4:AppTurista",            "App Turista",                  "Canal digital",
+  "mo4:PortalDestino",         "Portal Destino",               "Canal digital",
+  "mo4:IndicadorSaturacion",   "Indicador de saturación",      "Indicador"
+)
+
+nodes
+```
+
+# Definición de relaciones
+
+En un grafo, las **aristas** representan relaciones entre nodos.
+
+En términos semánticos, cada relación puede entenderse como un triple:
+
+> sujeto — predicado — objeto
+
+Por ejemplo:
+
+> Playa de Muro — está en — Municipio de Muro
+
+```{r relaciones}
+# Tabla de relaciones del grafo.
+# Cada fila representa una conexión entre dos entidades.
+#
+# En RDF esto se expresaría como triples.
+# Aquí lo representamos mediante una tabla sencilla
+# para facilitar su comprensión y análisis en R.
+
+edges <- tribble(
+  ~from,                 ~to,                         ~relacion,
+  "seg:Playa",           "seg:RecursoTuristico",      "subclase_de",
+  "mo4:PlayaDeMuro",     "seg:Playa",                 "es_un_tipo_de",
+  "mo4:PlayaDeMuro",     "mo4:MunicipioMuro",         "esta_en",
+  "mo4:PlayaDeMuro",     "mo4:Socorrismo",            "dispone_de",
+  "mo4:PlayaDeMuro",     "mo4:Aparcamiento",          "tiene_cerca",
+  "mo4:PlayaDeMuro",     "mo4:Accesibilidad",         "tiene_atributo",
+  "mo4:PlayaDeMuro",     "mo4:Imagenes",              "tiene_contenido",
+  "mo4:PlayaDeMuro",     "mo4:AppTurista",            "se_publica_en",
+  "mo4:PlayaDeMuro",     "mo4:PortalDestino",         "se_publica_en",
+  "mo4:PlayaDeMuro",     "mo4:IndicadorSaturacion",   "tiene_indicador"
+)
+
+edges
+```
+
+# Construcción del grafo
+
+Con las tablas de nodos y relaciones se puede construir un grafo dirigido.
+
+Un grafo dirigido permite representar relaciones con sentido:
+
+> Playa de Muro → está en → Municipio de Muro
+
+```{r construir-grafo}
+# Construcción del grafo a partir de las tablas anteriores.
+
+g <- graph_from_data_frame(
+  d = edges,
+  vertices = nodes,
+  directed = TRUE
+)
+
+g
+```
+
+# Visualización del grafo
+
+La siguiente figura muestra la representación simplificada del activo **Playa de Muro** como grafo.
+
+```{r visualizar-grafo, fig.width=10, fig.height=7}
+# Visualización básica del grafo.
+# Es una visualización didáctica, no un diseño final de interfaz.
+
+set.seed(123)
+
+plot(
+  g,
+  vertex.label = V(g)$label,
+  vertex.size = 28,
+  vertex.label.cex = 0.75,
+  edge.arrow.size = 0.4,
+  edge.label = E(g)$relacion,
+  edge.label.cex = 0.65,
+  main = "Ejemplo simplificado de grafo MO-4: Playa de Muro"
+)
+```
+
+# Lectura del ejemplo
+
+Este grafo permite interpretar el activo turístico de forma más rica que una tabla convencional.
+
+En una tabla, **Playa de Muro** sería una fila con campos.
+
+En el grafo, **Playa de Muro** es una entidad conectada con otras entidades:
+
+- una clase ontológica;
+- un municipio;
+- servicios;
+- atributos;
+- contenidos;
+- canales digitales;
+- indicadores.
+
+```{r relaciones-playa}
+# Relaciones directas del activo Playa de Muro.
+
+relaciones_playa <- edges %>%
+  filter(from == "mo4:PlayaDeMuro") %>%
+  left_join(nodes, by = c("to" = "id")) %>%
+  select(
+    activo = from,
+    relacion,
+    entidad_relacionada = label,
+    tipo_entidad = tipo
+  )
+
+relaciones_playa
+```
+
+# Ejemplo de consulta analítica
+
+Una ventaja del grafo es que permite hacer consultas sobre relaciones.
+
+Por ejemplo, podemos preguntar:
+
+> ¿Con qué entidades está conectada Playa de Muro?
+
+```{r vecinos}
+# Vecinos directos de Playa de Muro.
+# mode = "out" indica que buscamos relaciones que salen desde Playa de Muro.
+
+vecinos <- neighbors(
+  graph = g,
+  v = "mo4:PlayaDeMuro",
+  mode = "out"
+)
+
+V(g)[vecinos]$label
+```
+
+También podemos calcular qué nodos tienen más conexiones.
+
+```{r grado-salida}
+# Grado de salida: número de relaciones que salen de cada nodo.
+# En este ejemplo, Playa de Muro tendrá muchas relaciones porque es el activo central.
+
+grado_salida <- tibble(
+  id = V(g)$name,
+  label = V(g)$label,
+  tipo = V(g)$tipo,
+  grado_salida = degree(g, mode = "out")
+) %>%
+  arrange(desc(grado_salida))
+
+grado_salida
+```
+
+En un grafo real del MO-4, este tipo de análisis permitiría detectar:
+
+- activos muy conectados;
+- activos poco documentados;
+- municipios con baja cobertura;
+- recursos sin localización;
+- activos sin contenidos multimedia;
+- servicios turísticos no vinculados a canales digitales;
+- zonas con muchos recursos pero pocos servicios asociados.
+
+# Validación mínima de calidad del dato
+
+Una ontología no solo sirve para clasificar. También ayuda a definir qué datos mínimos debería tener cada activo.
+
+Por ejemplo, una ficha mínima de activo turístico podría exigir:
+
+- clase o tipo de activo;
+- municipio;
+- localización;
+- descripción;
+- canal de publicación;
+- estado de actualización.
+
+Aquí se muestra una validación muy sencilla.
+
+```{r validacion-minima}
+# Definimos las relaciones mínimas esperadas para un activo turístico.
+# Esto es un ejemplo simplificado.
+# En una implementación real podrían usarse reglas SHACL sobre RDF.
+
+relaciones_minimas <- c(
+  "es_un_tipo_de",
+  "esta_en",
+  "se_publica_en"
+)
+
+# Extraemos las relaciones disponibles para Playa de Muro.
+
+relaciones_disponibles <- edges %>%
+  filter(from == "mo4:PlayaDeMuro") %>%
+  pull(relacion)
+
+# Comprobamos qué relaciones mínimas faltan.
+
+relaciones_faltantes <- setdiff(
+  relaciones_minimas,
+  relaciones_disponibles
+)
+
+if (length(relaciones_faltantes) == 0) {
+  print("El activo cumple las relaciones mínimas del ejemplo.")
+} else {
+  print("Faltan relaciones mínimas:")
+  print(relaciones_faltantes)
+}
+```
+
+# Ejemplo de ampliación con otro activo
+
+Ahora añadimos un segundo activo, por ejemplo un evento.
+
+Esto permite mostrar cómo el grafo crece conectando activos entre sí y cómo puede apoyar análisis entre módulos.
+
+```{r ampliar-grafo-evento, fig.width=10, fig.height=7}
+# Nuevo nodo: evento turístico o cultural.
+
+nuevo_nodo <- tribble(
+  ~id,                         ~label,                         ~tipo,
+  "mo4:EventoDeportivoMuro",   "Evento deportivo en Muro",     "Evento MO-4"
+)
+
+# Nuevas relaciones.
+
+nuevas_relaciones <- tribble(
+  ~from,                        ~to,                         ~relacion,
+  "mo4:EventoDeportivoMuro",    "seg:Evento",                "es_un_tipo_de",
+  "mo4:EventoDeportivoMuro",    "mo4:MunicipioMuro",         "se_celebra_en",
+  "mo4:EventoDeportivoMuro",    "mo4:PlayaDeMuro",           "afecta_a",
+  "mo4:EventoDeportivoMuro",    "mo4:IndicadorSaturacion",   "puede_modificar"
+)
+
+# Combinamos nodos y relaciones.
+
+nodes_2 <- bind_rows(nodes, nuevo_nodo)
+edges_2 <- bind_rows(edges, nuevas_relaciones)
+
+# Reconstruimos el grafo ampliado.
+
+g2 <- graph_from_data_frame(
+  d = edges_2,
+  vertices = nodes_2,
+  directed = TRUE
+)
+
+plot(
+  g2,
+  vertex.label = V(g2)$label,
+  vertex.size = 28,
+  vertex.label.cex = 0.7,
+  edge.arrow.size = 0.4,
+  edge.label = E(g2)$relacion,
+  edge.label.cex = 0.6,
+  main = "Grafo MO-4 ampliado: activo turístico y evento"
+)
+```
+
+# Consulta sobre el grafo ampliado
+
+Ahora podemos preguntar:
+
+> ¿Qué activos o indicadores se ven afectados por el evento?
+
+```{r consulta-evento}
+relaciones_evento <- edges_2 %>%
+  filter(from == "mo4:EventoDeportivoMuro") %>%
+  left_join(nodes_2, by = c("to" = "id")) %>%
+  select(
+    evento = from,
+    relacion,
+    entidad_relacionada = label,
+    tipo_entidad = tipo
+  )
+
+relaciones_evento
+```
+
+Este ejemplo conecta directamente con una lectura operativa de la PID Mallorca: los eventos no son solo registros de agenda, sino elementos que pueden afectar a saturación, movilidad, recursos turísticos, servicios públicos y planificación territorial.
+
+# Lectura por actores del proyecto
+
+El mismo grafo puede ser útil para perfiles distintos.
+
+```{r tabla-actores}
+lectura_actores <- tribble(
+  ~actor, ~lectura_del_grafo,
+  "T2C / equipo técnico",
+  "Permite diseñar datos estructurados, identificadores, clases, propiedades, APIs, validaciones e integraciones con CMS o servicios comunes.",
+  "Universidad / computación estadística",
+  "Permite analizar relaciones, calidad del dato, cobertura territorial, activos poco documentados, indicadores de saturación y modelos predictivos.",
+  "Economistas de turismo",
+  "Permite interpretar el activo como parte de la oferta turística, conectado con movilidad, gasto, alojamiento, eventos, presión territorial y experiencia del visitante.",
+  "Fundació / Consell / técnicos públicos",
+  "Permite gobernar mejor el catálogo: saber qué existe, qué falta, quién mantiene cada dato, qué se publica y qué decisiones pueden justificarse.",
+  "Sector turístico",
+  "Permite reutilizar información fiable para productos, recomendaciones, rutas, paquetes, servicios y atención al visitante."
+)
+
+lectura_actores
+```
+
+# Interpretación para el MO-4
+
+El ejemplo anterior muestra que el grafo permite conectar distintos módulos y problemas de gestión.
+
+Una playa puede estar relacionada con:
+
+- un municipio;
+- servicios públicos;
+- canales de publicación;
+- indicadores de saturación;
+- eventos próximos;
+- información de movilidad;
+- contenidos multimedia;
+- datos de accesibilidad.
+
+Esto permite pasar de una visión de inventario a una visión de sistema.
+
+Para el MO-4, esta lógica es importante porque el catálogo de activos turísticos puede alimentar otros servicios de la PID:
+
+- Portal Destino;
+- App Turista;
+- Asistente Virtual;
+- cuadros de mando;
+- módulos de localización;
+- análisis de flujos y saturación;
+- evaluación del impacto de eventos.
+
+# Conclusión del ejemplo
+
+Este anexo no pretende reproducir la arquitectura técnica completa de la PID. En una implementación real, la representación semántica podría apoyarse en RDF, OWL, SKOS, SHACL, SPARQL y un triplestore como Virtuoso.
+
+El ejemplo sirve para mostrar la lógica de fondo:
+
+1. La ontología define las clases, propiedades y relaciones.
+2. El catálogo MO-4 contiene los activos concretos.
+3. El grafo conecta esos activos con territorio, servicios, indicadores y canales.
+4. La universidad puede explotar esa estructura para análisis estadístico, calidad del dato y modelos.
+5. El equipo técnico puede implementarla mediante APIs, CMS semántico y servicios interoperables.
+6. La administración puede utilizarla para gobernar mejor la información turística del destino.
+
+En síntesis:
+
+> La ontología aporta el lenguaje común del destino.  
+> El grafo convierte ese lenguaje en una red de datos reales, reutilizable para gestión, análisis y servicios turísticos inteligentes.
