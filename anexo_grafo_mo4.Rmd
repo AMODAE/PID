@@ -170,23 +170,44 @@ g
 
 La siguiente figura muestra la representación simplificada del activo **Playa de Muro** como grafo.
 
-```{r visualizar-grafo, fig.width=10, fig.height=7}
-# Visualización básica del grafo.
-# Es una visualización didáctica, no un diseño final de interfaz.
+
+```{r}
+knitr::include_graphics("grafo1_muro.png")
+```
+
+
+
+El gráfico anterior es una versión mejorada del código
+
+```{r, eval=FALSE, fig.width=10, fig.height=7}
+# dibujo con ggprah
+
+library(ggraph)
+library(grid)
 
 set.seed(123)
 
-plot(
-  g,
-  vertex.label = V(g)$label,
-  vertex.size = 28,
-  vertex.label.cex = 0.75,
-  edge.arrow.size = 0.4,
-  edge.label = E(g)$relacion,
-  edge.label.cex = 0.65,
-  main = "Ejemplo simplificado de grafo MO-4: Playa de Muro"
-)
+ggraph(g, layout = "fr") +
+  geom_edge_link(
+    aes(label = relacion),
+    arrow = arrow(length = unit(4, "mm")),
+    end_cap = circle(3, "mm"),
+    label_size = 3,
+    label_dodge = unit(2, "mm"),
+    angle_calc = "along"
+  ) +
+  geom_node_label(
+    aes(label = label, fill = tipo),
+    size = 4,
+    label.padding = unit(0.5, "lines"),
+    label.r = unit(0.1, "lines")
+  ) +
+  theme_void() +
+  ggtitle("Ejemplo simplificado de grafo MO-4: Playa de Muro")
+
 ```
+
+
 
 # Lectura del ejemplo
 
