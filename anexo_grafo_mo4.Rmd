@@ -179,7 +179,7 @@ knitr::include_graphics("grafo1_muro.png")
 
 El gráfico anterior es una versión mejorada del código
 
-```{r, eval=FALSE, fig.width=10, fig.height=7}
+```{r, eval=TRUE, fig.width=10, fig.height=7}
 # dibujo con ggprah
 
 library(ggraph)
@@ -202,8 +202,15 @@ ggraph(g, layout = "fr") +
     label.padding = unit(0.5, "lines"),
     label.r = unit(0.1, "lines")
   ) +
-  theme_void() +
-  ggtitle("Ejemplo simplificado de grafo MO-4: Playa de Muro")
+  theme_void() 
+  #+ggtitle("Ejemplo simplificado de grafo MO-4: Playa de Muro")
+# gruardar gráfico
+ggsave(
+  filename = "grafo1_muro.png",
+  width = 14,
+  height = 8,
+  dpi = 300
+)
 
 ```
 
@@ -382,6 +389,114 @@ plot(
   edge.label = E(g2)$relacion,
   edge.label.cex = 0.6,
   main = "Grafo MO-4 ampliado: activo turístico y evento"
+)
+```
+
+
+```{r}
+# ============================================================
+# Grafo MO-4 ampliado: activo turístico y evento
+# ============================================================
+
+library(tidyverse)
+library(igraph)
+library(ggraph)
+library(grid)
+
+# ------------------------------------------------------------
+# 1. Nuevo nodo: evento turístico o cultural
+# ------------------------------------------------------------
+
+nuevo_nodo <- tribble(
+  ~id,                       ~label,                     ~tipo,
+  "mo4:EventoDeportivoMuro", "Evento deportivo en Muro", "Evento MO-4"
+)
+
+# ------------------------------------------------------------
+# 2. Nuevas relaciones del evento
+# ------------------------------------------------------------
+
+nuevas_relaciones <- tribble(
+  ~from,                     ~to,                       ~relacion,
+  "mo4:EventoDeportivoMuro", "seg:Evento",              "es_un_tipo_de",
+  "mo4:EventoDeportivoMuro", "mo4:MunicipioMuro",       "se_celebra_en",
+  "mo4:EventoDeportivoMuro", "mo4:PlayaDeMuro",         "afecta_a",
+  "mo4:EventoDeportivoMuro", "mo4:IndicadorSaturacion", "puede_modificar"
+)
+
+# ------------------------------------------------------------
+# 3. Unimos los nodos y relaciones existentes con los nuevos
+# ------------------------------------------------------------
+
+nodes_2 <- bind_rows(nodes, nuevo_nodo)
+
+edges_2 <- bind_rows(edges, nuevas_relaciones)
+
+# ------------------------------------------------------------
+# 4. Construimos el grafo ampliado
+# ------------------------------------------------------------
+
+g2 <- graph_from_data_frame(
+  d = edges_2,
+  vertices = nodes_2,
+  directed = TRUE
+)
+
+# ------------------------------------------------------------
+# 5. Dibujamos el grafo con ggraph
+# ------------------------------------------------------------
+
+set.seed(123)
+
+p_grafo_mo4_evento <- ggraph(g2, layout = "fr") +
+
+  geom_edge_link(
+    aes(label = gsub("_", " ", relacion)),
+    arrow = arrow(length = unit(4, "mm")),
+    end_cap = circle(4, "mm"),
+    colour = "grey45",
+    width = 0.7,
+    label_size = 3,
+    label_colour = "black",
+    label_dodge = unit(2.5, "mm"),
+    angle_calc = "along",
+    check_overlap = TRUE
+  ) +
+
+  geom_node_label(
+    aes(label = label, fill = tipo),
+    size = 4,
+    colour = "black",
+    label.padding = unit(0.45, "lines"),
+    label.r = unit(0, "lines"),
+    label.size = 0.35
+  ) +
+
+  theme_void()  +
+  theme(
+    plot.title = element_text(
+      hjust = 0.5,
+      size = 16,
+      face = "bold"
+    ),
+    legend.position = "right",
+    legend.title = element_text(face = "bold")
+  )
+
+# Mostrar el grafo
+
+p_grafo_mo4_evento
+
+# ------------------------------------------------------------
+# 6. Guardar el grafo como PNG
+# ------------------------------------------------------------
+
+ggsave(
+  filename = "grafo_mo4_ampliado_evento.png",
+  plot = p_grafo_mo4_evento,
+  width = 14,
+  height = 8,
+  dpi = 300
 )
 ```
 
