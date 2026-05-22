@@ -2,7 +2,7 @@
 title: "Anexo. Ejemplo simplificado de ontología y grafo de conocimiento"
 subtitle: "Representación básica de un activo turístico con R"
 author: "Equipo UIB -  MoDAE (IAIB) - PID"
-date: "`r Sys.Date()`"
+date: "`r format(Sys.Date(), '%d/%m/%Y')`"
 output:
   html_document:
     toc: true
